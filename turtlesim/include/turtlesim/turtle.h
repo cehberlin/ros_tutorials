@@ -48,18 +48,28 @@
 #include <QPen>
 #include <QPointF>
 
+#include <map>
+
 #define PI 3.14159265
 
 namespace turtlesim
 {
 
+class Turtle; //forward declrartion for typedefs
+
+typedef boost::shared_ptr<Turtle> TurtlePtr;
+typedef std::map<std::string, TurtlePtr> M_Turtle;
+
 class Turtle
 {
 public:
-  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient);
+  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance);
 
-  bool update(double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height);
+  bool update(M_Turtle& turtles, double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height);
   void paint(QPainter &painter);
+
+  Pose getPose(qreal canvas_width, qreal canvas_height);
+
 private:
   void velocityCallback(const geometry_msgs::Twist::ConstPtr& vel);
   bool setPenCallback(turtlesim::SetPen::Request&, turtlesim::SetPen::Response&);
@@ -83,6 +93,7 @@ private:
 
   ros::Subscriber velocity_sub_;
   ros::Publisher pose_pub_;
+  ros::Publisher other_pose_pub_;
   ros::Publisher color_pub_;
   ros::ServiceServer set_pen_srv_;
   ros::ServiceServer teleport_relative_srv_;
@@ -91,6 +102,9 @@ private:
   ros::WallTime last_command_time_;
 
   float meter_;
+
+  float view_distance_;
+  bool views_other_;
 
   struct TeleportRequest
   {
@@ -109,8 +123,6 @@ private:
   typedef std::vector<TeleportRequest> V_TeleportRequest;
   V_TeleportRequest teleport_requests_;
 };
-typedef boost::shared_ptr<Turtle> TurtlePtr;
-
 }
 
 #endif

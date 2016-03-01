@@ -39,17 +39,19 @@
 #define DEFAULT_BG_G 0x56
 #define DEFAULT_BG_B 0xff
 
+#define DEFAULT_VIEW_DISTANCE 5
+
 namespace turtlesim
 {
 
-TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f)
+TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, int frame_height)
 : QFrame(parent, f)
-, path_image_(500, 500, QImage::Format_ARGB32)
+, path_image_(frame_width, frame_height, QImage::Format_ARGB32)
 , path_painter_(&path_image_)
 , frame_count_(0)
 , id_counter_(0)
 {
-  setFixedSize(500, 500);
+  setFixedSize(frame_width, frame_height);
   setWindowTitle("TurtleSim");
 
   srand(time(NULL));
@@ -176,7 +178,11 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
     }
   }
 
-  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[index], QPointF(x, height_in_meters_ - y), angle));
+  float view_distance = DEFAULT_VIEW_DISTANCE;
+
+  nh_.param("view_distance", view_distance, view_distance );
+
+  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[index], QPointF(x, height_in_meters_ - y), angle, view_distance));
   turtles_[real_name] = t;
   update();
 
@@ -238,7 +244,7 @@ void TurtleFrame::updateTurtles()
   M_Turtle::iterator end = turtles_.end();
   for (; it != end; ++it)
   {
-    modified |= it->second->update(0.001 * update_timer_->interval(), path_painter_, path_image_, width_in_meters_, height_in_meters_);
+    modified |= it->second->update(turtles_, 0.001 * update_timer_->interval(), path_painter_, path_image_, width_in_meters_, height_in_meters_);
   }
   if (modified)
   {

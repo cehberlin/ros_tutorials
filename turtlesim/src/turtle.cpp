@@ -31,6 +31,8 @@
 
 #include <QColor>
 #include <QRgb>
+#include <cmath>
+#include <limits>
 
 #define DEFAULT_PEN_R 0xb3
 #define DEFAULT_PEN_G 0xb8
@@ -39,7 +41,7 @@
 namespace turtlesim
 {
 
-Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient)
+Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance)
 : nh_(nh)
 , turtle_image_(turtle_image)
 , pos_(pos)
@@ -48,11 +50,14 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
 , ang_vel_(0.0)
 , pen_on_(true)
 , pen_(QColor(DEFAULT_PEN_R, DEFAULT_PEN_G, DEFAULT_PEN_B))
+, view_distance_(view_distance)
+, views_other_(false)
 {
   pen_.setWidth(3);
 
   velocity_sub_ = nh_.subscribe("cmd_vel", 1, &Turtle::velocityCallback, this);
   pose_pub_ = nh_.advertise<Pose>("pose", 1);
+  other_pose_pub_ = nh_.advertise<Pose>("neighbor_pose", 1);
   color_pub_ = nh_.advertise<Color>("color_sensor", 1);
   set_pen_srv_ = nh_.advertiseService("set_pen", &Turtle::setPenCallback, this);
   teleport_relative_srv_ = nh_.advertiseService("teleport_relative", &Turtle::teleportRelativeCallback, this);
@@ -107,7 +112,7 @@ void Turtle::rotateImage()
   turtle_rotated_image_ = turtle_image_.transformed(transform);
 }
 
-bool Turtle::update(double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height)
+bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height)
 {
   bool modified = false;
   qreal old_orient = orient_;
@@ -163,12 +168,7 @@ bool Turtle::update(double dt, QPainter& path_painter, const QImage& path_image,
   pos_.setY(std::min(std::max(static_cast<double>(pos_.y()), 0.0), static_cast<double>(canvas_height)));
 
   // Publish pose of the turtle
-  Pose p;
-  p.x = pos_.x();
-  p.y = canvas_height - pos_.y();
-  p.theta = orient_;
-  p.linear_velocity = lin_vel_;
-  p.angular_velocity = ang_vel_;
+  Pose p = getPose(canvas_width, canvas_height);
   pose_pub_.publish(p);
 
   // Figure out (and publish) the color underneath the turtle
@@ -179,6 +179,31 @@ bool Turtle::update(double dt, QPainter& path_painter, const QImage& path_image,
     color.g = qGreen(pixel);
     color.b = qBlue(pixel);
     color_pub_.publish(color);
+  }
+
+  Pose nearest_neighbor_pose;
+  float nearest_neighbor_distance = std::numeric_limits<float>::max();
+
+  //check collision
+  views_other_ = false;
+  for (M_Turtle::iterator it = turtles.begin(); it != turtles.end(); ++it)
+  {
+    if(it->second.get() == this){
+      continue;
+    }
+    Pose other = it->second->getPose(canvas_width, canvas_height);
+    float xd = other.x - p.x;
+    float yd = other.y - p.y;
+    float distance = std::sqrt(xd*xd+yd*yd);
+    if(distance< view_distance_ &&  nearest_neighbor_distance > distance){
+      nearest_neighbor_distance = distance;
+      nearest_neighbor_pose = other;
+      views_other_ = true;
+    }
+  }
+  if(views_other_)
+  {
+    other_pose_pub_.publish(nearest_neighbor_pose);
   }
 
   ROS_DEBUG("[%s]: pos_x: %f pos_y: %f theta: %f", nh_.getNamespace().c_str(), pos_.x(), pos_.y(), orient_);
@@ -207,6 +232,25 @@ void Turtle::paint(QPainter& painter)
   p.rx() -= 0.5 * turtle_rotated_image_.width();
   p.ry() -= 0.5 * turtle_rotated_image_.height();
   painter.drawImage(p, turtle_rotated_image_);
+
+  //draw view radius circle
+  QPen tmp_pen = painter.pen();
+  QPointF pCircle = pos_ * meter_;
+  if(views_other_){
+    painter.setPen(QColor("red"));
+  }
+  painter.drawEllipse(pCircle ,view_distance_/2* meter_,view_distance_/2 * meter_);
+  painter.setPen(tmp_pen);
 }
 
+Pose Turtle::getPose(qreal canvas_width, qreal canvas_height)
+{
+  Pose p;
+  p.x = pos_.x();
+  p.y = canvas_height - pos_.y();
+  p.theta = orient_;
+  p.linear_velocity = lin_vel_;
+  p.angular_velocity = ang_vel_;
+  return p;
+}
 }

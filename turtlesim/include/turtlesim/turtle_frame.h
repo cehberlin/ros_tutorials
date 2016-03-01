@@ -41,7 +41,6 @@
 # include <std_srvs/Empty.h>
 # include <turtlesim/Spawn.h>
 # include <turtlesim/Kill.h>
-# include <map>
 
 # include "turtle.h"
 #endif
@@ -53,7 +52,7 @@ class TurtleFrame : public QFrame
 {
   Q_OBJECT
 public:
-  TurtleFrame(QWidget* parent = 0, Qt::WindowFlags f = 0);
+  TurtleFrame(QWidget* parent = 0, Qt::WindowFlags f = 0, int frame_width = 500, int frame_height = 500);
   ~TurtleFrame();
 
   std::string spawnTurtle(const std::string& name, float x, float y, float angle);
@@ -89,7 +88,6 @@ private:
   ros::ServiceServer spawn_srv_;
   ros::ServiceServer kill_srv_;
 
-  typedef std::map<std::string, TurtlePtr> M_Turtle;
   M_Turtle turtles_;
   uint32_t id_counter_;
 

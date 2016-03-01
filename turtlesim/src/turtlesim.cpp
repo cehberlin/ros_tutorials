@@ -47,7 +47,11 @@ public:
 
   int exec()
   {
-    turtlesim::TurtleFrame frame;
+    int frame_width;
+    int frame_height;
+    nh_->param("frame_width", frame_width, 500);
+    nh_->param("frame_height", frame_height, 500);
+    turtlesim::TurtleFrame frame(0, 0, frame_width, frame_height);
     frame.show();
 
     return QApplication::exec();
