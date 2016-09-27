@@ -63,12 +63,14 @@ typedef std::map<std::string, TurtlePtr> M_Turtle;
 class Turtle
 {
 public:
-  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance);
+  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision);
 
   bool update(M_Turtle& turtles, double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height);
   void paint(QPainter &painter);
 
   Pose getPose(qreal canvas_width, qreal canvas_height);
+
+  bool isCollidable();
 
 private:
   void velocityCallback(const geometry_msgs::Twist::ConstPtr& vel);
@@ -105,6 +107,7 @@ private:
 
   float view_distance_;
   bool views_other_;
+  bool with_collision_; //if true other can collide with it and it also checks for collision
 
   struct TeleportRequest
   {

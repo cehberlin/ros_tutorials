@@ -40,6 +40,7 @@
 
 # include <std_srvs/Empty.h>
 # include <turtlesim/Spawn.h>
+# include <turtlesim/SpawnImg.h>
 # include <turtlesim/Kill.h>
 
 # include "turtle.h"
@@ -57,6 +58,7 @@ public:
 
   std::string spawnTurtle(const std::string& name, float x, float y, float angle);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
+  std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision );
 
 protected:
   void paintEvent(QPaintEvent* event);
@@ -72,6 +74,8 @@ private:
   bool clearCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
   bool resetCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
   bool spawnCallback(turtlesim::Spawn::Request&, turtlesim::Spawn::Response&);
+  bool spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim::SpawnImg::Response& res);
+
   bool killCallback(turtlesim::Kill::Request&, turtlesim::Kill::Response&);
 
   ros::NodeHandle nh_;
@@ -86,6 +90,7 @@ private:
   ros::ServiceServer clear_srv_;
   ros::ServiceServer reset_srv_;
   ros::ServiceServer spawn_srv_;
+  ros::ServiceServer spawn_img_srv_;
   ros::ServiceServer kill_srv_;
 
   M_Turtle turtles_;

@@ -16,6 +16,7 @@ add_service_files(DIRECTORY srv FILES
                   Kill.srv
                   SetPen.srv
                   Spawn.srv
+                  SpawnImg.srv
                   TeleportAbsolute.srv
                   TeleportRelative.srv)
 generate_messages(DEPENDENCIES geometry_msgs std_msgs std_srvs)

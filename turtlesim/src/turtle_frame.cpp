@@ -93,6 +93,8 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   clear_srv_ = nh_.advertiseService("clear", &TurtleFrame::clearCallback, this);
   reset_srv_ = nh_.advertiseService("reset", &TurtleFrame::resetCallback, this);
   spawn_srv_ = nh_.advertiseService("spawn", &TurtleFrame::spawnCallback, this);
+  spawn_img_srv_ = nh_.advertiseService("spawn_img", &TurtleFrame::spawnImgCallback, this);
+
   kill_srv_ = nh_.advertiseService("kill", &TurtleFrame::killCallback, this);
 
   ROS_INFO("Starting turtlesim with node name %s", ros::this_node::getName().c_str()) ;
@@ -133,6 +135,24 @@ bool TurtleFrame::spawnCallback(turtlesim::Spawn::Request& req, turtlesim::Spawn
   return true;
 }
 
+bool TurtleFrame::spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim::SpawnImg::Response& res)
+{
+  QString images_path = (ros::package::getPath("turtlesim") + "/images/" + req.img_name).c_str();
+  QImage img;
+  img.load(images_path);
+
+  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, img, req.with_collision);
+  if (name.empty())
+  {
+    ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
+    return false;
+  }
+
+  res.name = name;
+
+  return true;
+}
+
 bool TurtleFrame::killCallback(turtlesim::Kill::Request& req, turtlesim::Kill::Response&)
 {
   M_Turtle::iterator it = turtles_.find(req.name);
@@ -158,7 +178,11 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
   return spawnTurtle(name, x, y, angle, rand() % turtle_images_.size());
 }
 
-std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, size_t index)
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, size_t index){
+  return spawnTurtle(name, x, y, angle, turtle_images_[index], true);
+}
+
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision = true)
 {
   std::string real_name = name;
   if (real_name.empty())
@@ -182,7 +206,7 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 
   nh_.param("view_distance", view_distance, view_distance );
 
-  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), turtle_images_[index], QPointF(x, height_in_meters_ - y), angle, view_distance));
+  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), img, QPointF(x, height_in_meters_ - y), angle, view_distance, with_collision));
   turtles_[real_name] = t;
   update();
 

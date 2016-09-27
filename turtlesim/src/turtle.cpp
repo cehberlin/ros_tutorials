@@ -41,7 +41,7 @@
 namespace turtlesim
 {
 
-Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance)
+Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision)
 : nh_(nh)
 , turtle_image_(turtle_image)
 , pos_(pos)
@@ -52,12 +52,15 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
 , pen_(QColor(DEFAULT_PEN_R, DEFAULT_PEN_G, DEFAULT_PEN_B))
 , view_distance_(view_distance)
 , views_other_(false)
+, with_collision_(with_collision)
 {
   pen_.setWidth(3);
 
   velocity_sub_ = nh_.subscribe("cmd_vel", 1, &Turtle::velocityCallback, this);
   pose_pub_ = nh_.advertise<Pose>("pose", 1);
-  other_pose_pub_ = nh_.advertise<Pose>("neighbor_pose", 1);
+  if(with_collision_){
+    other_pose_pub_ = nh_.advertise<Pose>("neighbor_pose", 1);
+  }
   color_pub_ = nh_.advertise<Color>("color_sensor", 1);
   set_pen_srv_ = nh_.advertiseService("set_pen", &Turtle::setPenCallback, this);
   teleport_relative_srv_ = nh_.advertiseService("teleport_relative", &Turtle::teleportRelativeCallback, this);
@@ -185,24 +188,24 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
   float nearest_neighbor_distance = std::numeric_limits<float>::max();
 
   //check collision
-  views_other_ = false;
-  for (M_Turtle::iterator it = turtles.begin(); it != turtles.end(); ++it)
-  {
-    if(it->second.get() == this){
-      continue;
+  if(with_collision_){
+    views_other_ = false;
+    for (M_Turtle::iterator it = turtles.begin(); it != turtles.end(); ++it)
+    {
+      if(it->second.get() == this ||
+          !it->second.get()->isCollidable()){
+        continue;
+      }
+      Pose other = it->second->getPose(canvas_width, canvas_height);
+      float xd = other.x - p.x;
+      float yd = other.y - p.y;
+      float distance = std::sqrt(xd*xd+yd*yd);
+      if(distance< view_distance_ &&  nearest_neighbor_distance > distance){
+        nearest_neighbor_distance = distance;
+        nearest_neighbor_pose = other;
+        views_other_ = true;
+      }
     }
-    Pose other = it->second->getPose(canvas_width, canvas_height);
-    float xd = other.x - p.x;
-    float yd = other.y - p.y;
-    float distance = std::sqrt(xd*xd+yd*yd);
-    if(distance< view_distance_ &&  nearest_neighbor_distance > distance){
-      nearest_neighbor_distance = distance;
-      nearest_neighbor_pose = other;
-      views_other_ = true;
-    }
-  }
-  if(views_other_)
-  {
     other_pose_pub_.publish(nearest_neighbor_pose);
   }
 
@@ -234,13 +237,16 @@ void Turtle::paint(QPainter& painter)
   painter.drawImage(p, turtle_rotated_image_);
 
   //draw view radius circle
-  QPen tmp_pen = painter.pen();
-  QPointF pCircle = pos_ * meter_;
-  if(views_other_){
-    painter.setPen(QColor("red"));
+  if(with_collision_)
+  {
+    QPen tmp_pen = painter.pen();
+    QPointF pCircle = pos_ * meter_;
+    if(views_other_){
+      painter.setPen(QColor("red"));
+    }
+    painter.drawEllipse(pCircle ,view_distance_/2* meter_,view_distance_/2 * meter_);
+    painter.setPen(tmp_pen);
   }
-  painter.drawEllipse(pCircle ,view_distance_/2* meter_,view_distance_/2 * meter_);
-  painter.setPen(tmp_pen);
 }
 
 Pose Turtle::getPose(qreal canvas_width, qreal canvas_height)
@@ -253,4 +259,10 @@ Pose Turtle::getPose(qreal canvas_width, qreal canvas_height)
   p.angular_velocity = ang_vel_;
   return p;
 }
+
+bool Turtle::isCollidable()
+{
+  return with_collision_;
+}
+
 }
