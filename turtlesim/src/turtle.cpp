@@ -184,11 +184,13 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
     color_pub_.publish(color);
   }
 
-  Pose nearest_neighbor_pose;
-  float nearest_neighbor_distance = std::numeric_limits<float>::max();
-
   //check collision
   if(with_collision_){
+    Pose nearest_neighbor_pose;
+    //init to maximum distance
+    nearest_neighbor_pose.x = std::numeric_limits<float>::max();
+    nearest_neighbor_pose.y = std::numeric_limits<float>::max();
+    float nearest_neighbor_distance = std::numeric_limits<float>::max();
     views_other_ = false;
     for (M_Turtle::iterator it = turtles.begin(); it != turtles.end(); ++it)
     {
@@ -200,7 +202,7 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
       float xd = other.x - p.x;
       float yd = other.y - p.y;
       float distance = std::sqrt(xd*xd+yd*yd);
-      if(distance< view_distance_ &&  nearest_neighbor_distance > distance){
+      if(distance< view_distance_ && nearest_neighbor_distance > distance){
         nearest_neighbor_distance = distance;
         nearest_neighbor_pose = other;
         views_other_ = true;
