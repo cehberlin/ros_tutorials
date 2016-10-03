@@ -185,6 +185,8 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
   }
 
   Pose nearest_neighbor_pose;
+  nearest_neighbor_pose.x = std::numeric_limits<float>::max();
+  nearest_neighbor_pose.y = std::numeric_limits<float>::max();
   float nearest_neighbor_distance = std::numeric_limits<float>::max();
 
   //check collision
