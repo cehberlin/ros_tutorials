@@ -34,9 +34,9 @@
 #include <cmath>
 #include <limits>
 
-#define DEFAULT_PEN_R 0xb3
-#define DEFAULT_PEN_G 0xb8
-#define DEFAULT_PEN_B 0xff
+#define DEFAULT_PEN_R 0x8b
+#define DEFAULT_PEN_G 0x8b
+#define DEFAULT_PEN_B 0x8b
 
 namespace turtlesim
 {
