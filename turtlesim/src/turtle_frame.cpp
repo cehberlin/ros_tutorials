@@ -62,10 +62,6 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
 
   connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
-  nh_.setParam("background_r", DEFAULT_BG_R);
-  nh_.setParam("background_g", DEFAULT_BG_G);
-  nh_.setParam("background_b", DEFAULT_BG_B);
-
   QVector<QString> turtles;
   turtles.append("box-turtle.png");
   turtles.append("robot-turtle.png");
