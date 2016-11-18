@@ -62,6 +62,7 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
   pose_pub_ = nh_.advertise<Pose>("pose", 1);
   if(with_collision_){
     other_pose_pub_ = nh_.advertise<Pose>("neighbor_pose", 1);
+    view_distance_pub_ = nh_.advertise<PoseArray>("view_poses", 1); 
   }
   color_pub_ = nh_.advertise<Color>("color_sensor", 1);
   set_pen_srv_ = nh_.advertiseService("set_pen", &Turtle::setPenCallback, this);
@@ -189,6 +190,7 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
   //check collision
   if(with_collision_){
     Pose nearest_neighbor_pose;
+    PoseArray nearestNeighbors; 
     //init to maximum distance
     nearest_neighbor_pose.x = std::numeric_limits<float>::max();
     nearest_neighbor_pose.y = std::numeric_limits<float>::max();
@@ -204,12 +206,16 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
       float xd = other.x - p.x;
       float yd = other.y - p.y;
       float distance = std::sqrt(xd*xd+yd*yd);
-      if(distance< view_distance_ && nearest_neighbor_distance > distance){
-        nearest_neighbor_distance = distance;
-        nearest_neighbor_pose = other;
-        views_other_ = true;
+      if(distance < view_distance_){
+	nearestNeighbors.poses.push_back(other); 
+ 	if(nearest_neighbor_distance > distance){
+          nearest_neighbor_distance = distance;
+          nearest_neighbor_pose = other;
+        }
+	views_other_ = true;
       }
     }
+    view_distance_pub_.publish(nearestNeighbors);
     other_pose_pub_.publish(nearest_neighbor_pose);
   }
 

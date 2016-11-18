@@ -36,6 +36,7 @@
 # include <boost/shared_ptr.hpp>
 
 # include <turtlesim/Pose.h>
+# include <turtlesim/PoseArray.h>
 # include <geometry_msgs/Twist.h>
 # include <turtlesim/SetPen.h>
 # include <turtlesim/TeleportRelative.h>
@@ -96,6 +97,7 @@ private:
   ros::Subscriber velocity_sub_;
   ros::Publisher pose_pub_;
   ros::Publisher other_pose_pub_;
+  ros::Publisher view_distance_pub_;
   ros::Publisher color_pub_;
   ros::ServiceServer set_pen_srv_;
   ros::ServiceServer teleport_relative_srv_;
