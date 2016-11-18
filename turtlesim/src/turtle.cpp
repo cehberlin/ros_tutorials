@@ -205,11 +205,11 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
       float yd = other.y - p.y;
       float distance = std::sqrt(xd*xd+yd*yd);
       if(distance < view_distance_){
-	nearestNeighbors.poses.push_back(other); 
- 	if(nearest_neighbor_distance > distance){
-          nearest_neighbor_distance = distance;
-          nearest_neighbor_pose = other;
-        }
+	     nearestNeighbors.poses.push_back(other);
+ 	     if(nearest_neighbor_distance > distance){
+           nearest_neighbor_distance = distance;
+           nearest_neighbor_pose = other;
+         }
 	views_other_ = true;
       }
     }
