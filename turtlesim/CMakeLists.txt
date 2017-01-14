@@ -17,6 +17,7 @@ add_service_files(DIRECTORY srv FILES
                   SetPen.srv
                   Spawn.srv
                   SpawnImg.srv
+                  DrawGradient.srv
                   TeleportAbsolute.srv
                   TeleportRelative.srv)
 generate_messages(DEPENDENCIES geometry_msgs std_msgs std_srvs)

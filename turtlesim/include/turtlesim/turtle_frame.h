@@ -33,6 +33,7 @@
 #include <QPaintEvent>
 #include <QTimer>
 #include <QVector>
+#include <vector>
 
 // This prevents a MOC error with versions of boost >= 1.48
 #ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
@@ -42,6 +43,7 @@
 # include <turtlesim/Spawn.h>
 # include <turtlesim/SpawnImg.h>
 # include <turtlesim/Kill.h>
+# include <turtlesim/DrawGradient.h>
 
 # include "turtle.h"
 #endif
@@ -60,6 +62,8 @@ public:
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision );
 
+  void drawGradient(QPainter& painter);
+
 protected:
   void paintEvent(QPaintEvent* event);
 
@@ -75,6 +79,7 @@ private:
   bool resetCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
   bool spawnCallback(turtlesim::Spawn::Request&, turtlesim::Spawn::Response&);
   bool spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim::SpawnImg::Response& res);
+  bool drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res);
 
   bool killCallback(turtlesim::Kill::Request&, turtlesim::Kill::Response&);
 
@@ -91,6 +96,7 @@ private:
   ros::ServiceServer reset_srv_;
   ros::ServiceServer spawn_srv_;
   ros::ServiceServer spawn_img_srv_;
+  ros::ServiceServer draw_gradient_srv_;
   ros::ServiceServer kill_srv_;
 
   M_Turtle turtles_;
@@ -101,6 +107,17 @@ private:
   float meter_;
   float width_in_meters_;
   float height_in_meters_;
+
+
+  struct grad{
+    float x;
+    float y;
+    float r_goal;
+    float r_total;
+    int attraction;
+  };
+
+  std::vector<grad > gradient;
 };
 
 }

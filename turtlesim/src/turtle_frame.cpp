@@ -90,6 +90,7 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   reset_srv_ = nh_.advertiseService("reset", &TurtleFrame::resetCallback, this);
   spawn_srv_ = nh_.advertiseService("spawn", &TurtleFrame::spawnCallback, this);
   spawn_img_srv_ = nh_.advertiseService("spawn_img", &TurtleFrame::spawnImgCallback, this);
+  draw_gradient_srv_ = nh_.advertiseService("draw_gradient", &TurtleFrame::drawGradientCallback, this);
 
   kill_srv_ = nh_.advertiseService("kill", &TurtleFrame::killCallback, this);
 
@@ -153,6 +154,20 @@ bool TurtleFrame::spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim:
   return true;
 }
 
+bool TurtleFrame::drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res)
+{
+
+  struct grad grad1 = {req.x, req.y, req.r_goal, req.r_total, req.attraction};
+  gradient.push_back(grad1);
+
+  res.name = "gradient";
+
+  update(); // trigger paint event
+
+  return true;
+}
+
+
 bool TurtleFrame::killCallback(turtlesim::Kill::Request& req, turtlesim::Kill::Response&)
 {
   M_Turtle::iterator it = turtles_.find(req.name);
@@ -210,7 +225,7 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
   turtles_[real_name] = t;
   update();
 
-  ROS_INFO("Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]", real_name.c_str(), x, y, angle);
+  ROS_WARN("Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]", real_name.c_str(), x, y, angle);
 
   return real_name;
 }
@@ -246,6 +261,26 @@ void TurtleFrame::paintEvent(QPaintEvent*)
   QPainter painter(this);
 
   painter.drawImage(QPoint(0, 0), path_image_);
+
+  // draw Eclipse for gradients
+  QPen grad_pen = painter.pen();
+
+  for(std::vector<grad>::iterator it=gradient.begin(); it != gradient.end(); ++it)
+  {
+    QPointF pCircle = QPoint((*it).x , height_in_meters_ - (*it).y ) * meter_;
+
+    painter.setPen(grad_pen);
+
+    if((*it).attraction == -1)
+    {
+          painter.setPen(QColor("red"));
+    }
+
+    painter.drawEllipse(pCircle, (*it).r_goal *meter_, (*it).r_goal *meter_);
+
+    painter.drawEllipse(pCircle, (*it).r_total *meter_, (*it).r_total *meter_);
+
+  }
 
   M_Turtle::iterator it = turtles_.begin();
   M_Turtle::iterator end = turtles_.end();
