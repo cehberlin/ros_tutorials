@@ -267,7 +267,7 @@ void TurtleFrame::paintEvent(QPaintEvent*)
 
   for(std::vector<grad>::iterator it=gradient.begin(); it != gradient.end(); ++it)
   {
-    QPointF pCircle = QPoint((*it).x , height_in_meters_ - (*it).y ) * meter_;
+    QPointF pCircle = QPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
 
     painter.setPen(grad_pen);
 
@@ -275,6 +275,8 @@ void TurtleFrame::paintEvent(QPaintEvent*)
     {
           painter.setPen(QColor("red"));
     }
+
+    painter.drawPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
 
     painter.drawEllipse(pCircle, (*it).r_goal *meter_, (*it).r_goal *meter_);
 

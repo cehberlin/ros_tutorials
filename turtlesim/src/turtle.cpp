@@ -253,6 +253,7 @@ void Turtle::paint(QPainter& painter)
       painter.setPen(QColor("red"));
     }
     painter.drawEllipse(pCircle ,view_distance_/2* meter_,view_distance_/2 * meter_);
+    painter.drawEllipse(pCircle, 0.5 * meter_, 0.5*meter_);
     painter.setPen(tmp_pen);
   }
 }
