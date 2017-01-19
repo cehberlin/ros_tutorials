@@ -16,6 +16,7 @@ add_service_files(DIRECTORY srv FILES
                   Kill.srv
                   SetPen.srv
                   Spawn.srv
+                  SpawnGrad.srv
                   SpawnImg.srv
                   DrawGradient.srv
                   TeleportAbsolute.srv

@@ -41,7 +41,7 @@
 namespace turtlesim
 {
 
-Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision)
+Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, float goal_radius, float total_radius)
 : nh_(nh)
 , turtle_image_(turtle_image)
 , pos_(pos)
@@ -53,6 +53,8 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
 , view_distance_(view_distance)
 , views_other_(false)
 , with_collision_(with_collision)
+, goal_radius_(goal_radius)
+, total_radius_(total_radius)
 {
   pen_.setWidth(3);
 
@@ -249,11 +251,22 @@ void Turtle::paint(QPainter& painter)
   {
     QPen tmp_pen = painter.pen();
     QPointF pCircle = pos_ * meter_;
+    painter.setPen(QColor("black"));
+    painter.setPen(Qt::PenStyle(Qt::SolidLine));
     if(views_other_){
       painter.setPen(QColor("red"));
     }
-    painter.drawEllipse(pCircle ,1.5* meter_,1.5 * meter_);
-    painter.drawEllipse(pCircle, 0.5 * meter_, 0.5*meter_);
+
+    painter.drawEllipse(pCircle, view_distance_/2*meter_, view_distance_/2*meter_);
+
+    // draw goal_radius and diffusion of robot
+    QPen gradient_pen = painter.pen();
+    gradient_pen.setColor(QColor("blue"));
+    gradient_pen.setStyle(Qt::PenStyle(Qt::DotLine));
+    painter.setPen(gradient_pen);
+    painter.drawEllipse(pCircle, total_radius_* meter_, total_radius_ * meter_);
+    painter.drawEllipse(pCircle, goal_radius_ * meter_, goal_radius_*meter_);
+
     painter.setPen(tmp_pen);
   }
 }

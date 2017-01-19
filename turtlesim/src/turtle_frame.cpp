@@ -89,6 +89,7 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   clear_srv_ = nh_.advertiseService("clear", &TurtleFrame::clearCallback, this);
   reset_srv_ = nh_.advertiseService("reset", &TurtleFrame::resetCallback, this);
   spawn_srv_ = nh_.advertiseService("spawn", &TurtleFrame::spawnCallback, this);
+  spawn_grad_srv_ = nh_.advertiseService("spawn_grad", &TurtleFrame::spawnGradCallback, this);
   spawn_img_srv_ = nh_.advertiseService("spawn_img", &TurtleFrame::spawnImgCallback, this);
   draw_gradient_srv_ = nh_.advertiseService("draw_gradient", &TurtleFrame::drawGradientCallback, this);
 
@@ -125,6 +126,20 @@ TurtleFrame::~TurtleFrame()
 bool TurtleFrame::spawnCallback(turtlesim::Spawn::Request& req, turtlesim::Spawn::Response& res)
 {
   std::string name = spawnTurtle(req.name, req.x, req.y, req.theta);
+  if (name.empty())
+  {
+    ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
+    return false;
+  }
+
+  res.name = name;
+
+  return true;
+}
+
+bool TurtleFrame::spawnGradCallback(turtlesim::SpawnGrad::Request& req, turtlesim::SpawnGrad::Response& res)
+{
+  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, req.goal_radius, req.total_radius);
   if (name.empty())
   {
     ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
@@ -194,10 +209,19 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 }
 
 std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, size_t index){
-  return spawnTurtle(name, x, y, angle, turtle_images_[index], true);
+  return spawnTurtle(name, x, y, angle, turtle_images_[index], true, 0, 0);
 }
 
-std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision = true)
+
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, float goal_radius, float total_radius){
+  return spawnTurtle(name, x, y, angle, turtle_images_[rand() % turtle_images_.size()], true, goal_radius, total_radius);
+}
+
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision){
+    return spawnTurtle(name, x, y, angle, img, with_collision, 0.0, 0.0);
+}
+
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision = true, float goal_radius = 0.0, float total_radius = 0.0)
 {
   std::string real_name = name;
   if (real_name.empty())
@@ -221,7 +245,7 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 
   nh_.param("view_distance", view_distance, view_distance );
 
-  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), img, QPointF(x, height_in_meters_ - y), angle, view_distance, with_collision));
+  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), img, QPointF(x, height_in_meters_ - y), angle, view_distance, with_collision, goal_radius, total_radius));
   turtles_[real_name] = t;
   update();
 
@@ -263,27 +287,52 @@ void TurtleFrame::paintEvent(QPaintEvent*)
   painter.drawImage(QPoint(0, 0), path_image_);
 
   // draw Eclipse for gradients
+  QPen grad_pen_goal_attractive = painter.pen();
+  grad_pen_goal_attractive.setWidth(2);
+  grad_pen_goal_attractive.setColor(QColor("black"));
+  grad_pen_goal_attractive.setStyle(Qt::PenStyle(Qt::SolidLine));
+
+  QPen grad_pen_goal_repulsive = painter.pen();
+  grad_pen_goal_repulsive.setWidth(2);
+  grad_pen_goal_repulsive.setColor(QColor("red"));
+  grad_pen_goal_repulsive.setStyle(Qt::PenStyle(Qt::SolidLine));
+
   QPen grad_pen = painter.pen();
+  grad_pen.setStyle(Qt::PenStyle(Qt::DashLine));
+
+  QPen grad_pen_repulsive = painter.pen();
+  grad_pen_repulsive.setStyle(Qt::PenStyle(Qt::DashLine));
+  grad_pen_repulsive.setColor(QColor("red"));
+
 
   for(std::vector<grad>::iterator it=gradient.begin(); it != gradient.end(); ++it)
   {
     QPointF pCircle = QPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
 
-    painter.setPen(grad_pen);
-
     if((*it).attraction == -1)
     {
-          painter.setPen(QColor("red"));
+          painter.setPen(grad_pen_goal_repulsive);
+    }
+    else {
+         painter.setPen(grad_pen_goal_attractive);
     }
 
-    painter.drawPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
-
+    // draw Gradient
     painter.drawEllipse(pCircle, (*it).r_goal *meter_, (*it).r_goal *meter_);
 
+    painter.setPen(grad_pen);
+    if((*it).attraction == -1)
+    {
+          painter.setPen(grad_pen_repulsive);
+    }
+    else {
+        painter.setPen(grad_pen);
+    }
     painter.drawEllipse(pCircle, (*it).r_total *meter_, (*it).r_total *meter_);
 
   }
 
+  // draw turtles
   M_Turtle::iterator it = turtles_.begin();
   M_Turtle::iterator end = turtles_.end();
   for (; it != end; ++it)

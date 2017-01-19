@@ -42,6 +42,7 @@
 # include <std_srvs/Empty.h>
 # include <turtlesim/Spawn.h>
 # include <turtlesim/SpawnImg.h>
+# include <turtlesim/SpawnGrad.h>
 # include <turtlesim/Kill.h>
 # include <turtlesim/DrawGradient.h>
 
@@ -60,7 +61,9 @@ public:
 
   std::string spawnTurtle(const std::string& name, float x, float y, float angle);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
-  std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision );
+  std::string spawnTurtle(const std::string& name, float x, float y, float angle, float goal_radius, float total_radius);
+  std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision);
+  std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision, float goal_radius, float total_radius);
 
   void drawGradient(QPainter& painter);
 
@@ -78,6 +81,7 @@ private:
   bool clearCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
   bool resetCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
   bool spawnCallback(turtlesim::Spawn::Request&, turtlesim::Spawn::Response&);
+  bool spawnGradCallback(turtlesim::SpawnGrad::Request& req, turtlesim::SpawnGrad::Response& res);
   bool spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim::SpawnImg::Response& res);
   bool drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res);
 
@@ -95,6 +99,7 @@ private:
   ros::ServiceServer clear_srv_;
   ros::ServiceServer reset_srv_;
   ros::ServiceServer spawn_srv_;
+  ros::ServiceServer spawn_grad_srv_;
   ros::ServiceServer spawn_img_srv_;
   ros::ServiceServer draw_gradient_srv_;
   ros::ServiceServer kill_srv_;
