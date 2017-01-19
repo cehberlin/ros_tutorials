@@ -42,7 +42,7 @@
 namespace turtlesim
 {
 
-Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, bool draw_name)
+Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, bool draw_name, float goal_radius, float total_radius)
 : nh_(nh)
 , turtle_image_(turtle_image)
 , pos_(pos)
@@ -55,6 +55,8 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
 , views_other_(false)
 , with_collision_(with_collision)
 , draw_name_(draw_name)
+, goal_radius_(goal_radius)
+, total_radius_(total_radius)
 {
   pen_.setWidth(3);
 
@@ -207,11 +209,11 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
       float yd = other.y - p.y;
       float distance = std::sqrt(xd*xd+yd*yd);
       if(distance < view_distance_){
-	nearestNeighbors.poses.push_back(other); 
- 	if(nearest_neighbor_distance > distance){
-          nearest_neighbor_distance = distance;
-          nearest_neighbor_pose = other;
-        }
+	     nearestNeighbors.poses.push_back(other);
+ 	     if(nearest_neighbor_distance > distance){
+           nearest_neighbor_distance = distance;
+           nearest_neighbor_pose = other;
+         }
 	views_other_ = true;
       }
     }
@@ -259,10 +261,22 @@ void Turtle::paint(QPainter& painter)
   {
     QPen tmp_pen = painter.pen();
     QPointF pCircle = pos_ * meter_;
+    painter.setPen(QColor("black"));
+    painter.setPen(Qt::PenStyle(Qt::SolidLine));
     if(views_other_){
       painter.setPen(QColor("red"));
     }
-    painter.drawEllipse(pCircle ,view_distance_/2* meter_,view_distance_/2 * meter_);
+
+    painter.drawEllipse(pCircle, view_distance_/2*meter_, view_distance_/2*meter_);
+
+    // draw goal_radius and diffusion of robot
+    QPen gradient_pen = painter.pen();
+    gradient_pen.setColor(QColor("blue"));
+    gradient_pen.setStyle(Qt::PenStyle(Qt::DotLine));
+    painter.setPen(gradient_pen);
+    painter.drawEllipse(pCircle, total_radius_* meter_, total_radius_ * meter_);
+    painter.drawEllipse(pCircle, goal_radius_ * meter_, goal_radius_*meter_);
+
     painter.setPen(tmp_pen);
   }
 }

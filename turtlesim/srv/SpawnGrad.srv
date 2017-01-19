@@ -1,0 +1,8 @@
+float32 x
+float32 y
+float32 theta
+string name # Optional.  A unique name will be created and returned if this is empty
+float32 goal_radius
+float32 total_radius
+---
+string name
