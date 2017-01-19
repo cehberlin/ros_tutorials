@@ -113,6 +113,8 @@ private:
   float width_in_meters_;
   float height_in_meters_;
 
+  bool draw_name_;
+
 
   struct grad{
     float x;

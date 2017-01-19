@@ -31,6 +31,7 @@
 
 #include <QColor>
 #include <QRgb>
+#include <qstatictext.h>
 #include <cmath>
 #include <limits>
 
@@ -41,7 +42,7 @@
 namespace turtlesim
 {
 
-Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, float goal_radius, float total_radius)
+Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, bool draw_name, float goal_radius, float total_radius)
 : nh_(nh)
 , turtle_image_(turtle_image)
 , pos_(pos)
@@ -53,6 +54,7 @@ Turtle::Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPoi
 , view_distance_(view_distance)
 , views_other_(false)
 , with_collision_(with_collision)
+, draw_name_(draw_name)
 , goal_radius_(goal_radius)
 , total_radius_(total_radius)
 {
@@ -245,6 +247,14 @@ void Turtle::paint(QPainter& painter)
   p.rx() -= 0.5 * turtle_rotated_image_.width();
   p.ry() -= 0.5 * turtle_rotated_image_.height();
   painter.drawImage(p, turtle_rotated_image_);
+
+  if(this->draw_name_)
+  {    //draw turtle name
+    p.ry() -= 0.25 * turtle_rotated_image_.height();
+    QString text = QString::fromUtf8(this->nh_.getNamespace().c_str());
+
+    painter.drawStaticText(p, QStaticText(text));
+  }
 
   //draw view radius circle
   if(with_collision_)

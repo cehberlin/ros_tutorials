@@ -64,7 +64,7 @@ typedef std::map<std::string, TurtlePtr> M_Turtle;
 class Turtle
 {
 public:
-  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, float goal_radius, float total_radius);
+  Turtle(const ros::NodeHandle& nh, const QImage& turtle_image, const QPointF& pos, float orient, float view_distance, bool with_collision, bool draw_name, float goal_radius, float total_radius);
 
   bool update(M_Turtle& turtles, double dt, QPainter& path_painter, const QImage& path_image, qreal canvas_width, qreal canvas_height);
   void paint(QPainter &painter);
@@ -112,6 +112,8 @@ private:
   bool with_collision_; //if true other can collide with it and it also checks for collision
   float goal_radius_;
   float total_radius_;
+
+  bool draw_name_; //flag if the namespace/name is drawn too.
 
   struct TeleportRequest
   {

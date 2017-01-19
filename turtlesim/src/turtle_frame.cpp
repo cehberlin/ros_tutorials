@@ -105,6 +105,9 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   if(with_initial_turtle){
     spawnTurtle("", width_in_meters_ / 2.0, height_in_meters_ / 2.0, 0);
   }
+
+  nh_.param("draw_name", this->draw_name_, true);
+
   // spawn all available turtle types
   if(FALSE)
   {
@@ -245,11 +248,11 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 
   nh_.param("view_distance", view_distance, view_distance );
 
-  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), img, QPointF(x, height_in_meters_ - y), angle, view_distance, with_collision, goal_radius, total_radius));
+  TurtlePtr t(new Turtle(ros::NodeHandle(real_name), img, QPointF(x, height_in_meters_ - y), angle, view_distance, with_collision, this->draw_name_, goal_radius, total_radius));
   turtles_[real_name] = t;
   update();
 
-  ROS_WARN("Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]", real_name.c_str(), x, y, angle);
+  ROS_INFO("Spawning turtle [%s] at x=[%f], y=[%f], theta=[%f]", real_name.c_str(), x, y, angle);
 
   return real_name;
 }
