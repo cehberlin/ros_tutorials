@@ -174,9 +174,8 @@ bool TurtleFrame::spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim:
 
 bool TurtleFrame::drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res)
 {
-
-  struct grad grad1 = {req.x, req.y, req.r_goal, req.r_total, req.attraction};
-  gradient.push_back(grad1);
+  // update gradient vector
+  gradient = req.gradients;
 
   res.name = "gradient";
 
@@ -308,7 +307,7 @@ void TurtleFrame::paintEvent(QPaintEvent*)
   grad_pen_repulsive.setColor(QColor("red"));
 
 
-  for(std::vector<grad>::iterator it=gradient.begin(); it != gradient.end(); ++it)
+  for(std::vector<turtlesim::Gradient >::iterator it=gradient.begin(); it != gradient.end(); ++it)
   {
     QPointF pCircle = QPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
 

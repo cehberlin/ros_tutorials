@@ -45,6 +45,7 @@
 # include <turtlesim/SpawnGrad.h>
 # include <turtlesim/Kill.h>
 # include <turtlesim/DrawGradient.h>
+# include <turtlesim/Gradient.h>
 
 # include "turtle.h"
 #endif
@@ -115,16 +116,7 @@ private:
 
   bool draw_name_;
 
-
-  struct grad{
-    float x;
-    float y;
-    float r_goal;
-    float r_total;
-    int attraction;
-  };
-
-  std::vector<grad > gradient;
+  std::vector<turtlesim::Gradient > gradient;
 };
 
 }
