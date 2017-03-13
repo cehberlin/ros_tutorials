@@ -1,5 +1,0 @@
-float32 x
-float32 y
-float32 r_goal
-float32 r_total
-int8 attraction
