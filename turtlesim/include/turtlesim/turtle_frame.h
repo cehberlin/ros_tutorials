@@ -44,7 +44,8 @@
 # include <turtlesim/SpawnImg.h>
 # include <turtlesim/SpawnGrad.h>
 # include <turtlesim/Kill.h>
-# include <turtlesim/DrawGradient.h>
+# include <turtlesim/DrawEllipse.h>
+# include <turtlesim/Ellipse.h>
 
 # include "turtle.h"
 #endif
@@ -65,7 +66,7 @@ public:
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision, float goal_radius, float total_radius);
 
-  void drawGradient(QPainter& painter);
+  void drawEllipse(QPainter& painter);
 
 protected:
   void paintEvent(QPaintEvent* event);
@@ -83,7 +84,7 @@ private:
   bool spawnCallback(turtlesim::Spawn::Request&, turtlesim::Spawn::Response&);
   bool spawnGradCallback(turtlesim::SpawnGrad::Request& req, turtlesim::SpawnGrad::Response& res);
   bool spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim::SpawnImg::Response& res);
-  bool drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res);
+  bool drawEllipseCallback(turtlesim::DrawEllipse::Request& req, turtlesim::DrawEllipse::Response& res);
 
   bool killCallback(turtlesim::Kill::Request&, turtlesim::Kill::Response&);
 
@@ -101,7 +102,7 @@ private:
   ros::ServiceServer spawn_srv_;
   ros::ServiceServer spawn_grad_srv_;
   ros::ServiceServer spawn_img_srv_;
-  ros::ServiceServer draw_gradient_srv_;
+  ros::ServiceServer draw_ellipse_srv_;
   ros::ServiceServer kill_srv_;
 
   M_Turtle turtles_;
@@ -115,16 +116,7 @@ private:
 
   bool draw_name_;
 
-
-  struct grad{
-    float x;
-    float y;
-    float r_goal;
-    float r_total;
-    int attraction;
-  };
-
-  std::vector<grad > gradient;
+  std::vector<turtlesim::Ellipse > ellipse;
 };
 
 }

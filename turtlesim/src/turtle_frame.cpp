@@ -91,7 +91,7 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   spawn_srv_ = nh_.advertiseService("spawn", &TurtleFrame::spawnCallback, this);
   spawn_grad_srv_ = nh_.advertiseService("spawn_grad", &TurtleFrame::spawnGradCallback, this);
   spawn_img_srv_ = nh_.advertiseService("spawn_img", &TurtleFrame::spawnImgCallback, this);
-  draw_gradient_srv_ = nh_.advertiseService("draw_gradient", &TurtleFrame::drawGradientCallback, this);
+  draw_ellipse_srv_ = nh_.advertiseService("draw_ellipse", &TurtleFrame::drawEllipseCallback, this);
 
   kill_srv_ = nh_.advertiseService("kill", &TurtleFrame::killCallback, this);
 
@@ -172,13 +172,12 @@ bool TurtleFrame::spawnImgCallback(turtlesim::SpawnImg::Request& req, turtlesim:
   return true;
 }
 
-bool TurtleFrame::drawGradientCallback(turtlesim::DrawGradient::Request& req, turtlesim::DrawGradient::Response& res)
+bool TurtleFrame::drawEllipseCallback(turtlesim::DrawEllipse::Request& req, turtlesim::DrawEllipse::Response& res)
 {
+  // update gradient vector
+  ellipse = req.ellipses;
 
-  struct grad grad1 = {req.x, req.y, req.r_goal, req.r_total, req.attraction};
-  gradient.push_back(grad1);
-
-  res.name = "gradient";
+  res.name = "ellipse";
 
   update(); // trigger paint event
 
@@ -289,50 +288,23 @@ void TurtleFrame::paintEvent(QPaintEvent*)
 
   painter.drawImage(QPoint(0, 0), path_image_);
 
-  // draw Eclipse for gradients
-  QPen grad_pen_goal_attractive = painter.pen();
-  grad_pen_goal_attractive.setWidth(2);
-  grad_pen_goal_attractive.setColor(QColor("black"));
-  grad_pen_goal_attractive.setStyle(Qt::PenStyle(Qt::SolidLine));
-
-  QPen grad_pen_goal_repulsive = painter.pen();
-  grad_pen_goal_repulsive.setWidth(2);
-  grad_pen_goal_repulsive.setColor(QColor("red"));
-  grad_pen_goal_repulsive.setStyle(Qt::PenStyle(Qt::SolidLine));
-
-  QPen grad_pen = painter.pen();
-  grad_pen.setStyle(Qt::PenStyle(Qt::DashLine));
-
-  QPen grad_pen_repulsive = painter.pen();
-  grad_pen_repulsive.setStyle(Qt::PenStyle(Qt::DashLine));
-  grad_pen_repulsive.setColor(QColor("red"));
-
-
-  for(std::vector<grad>::iterator it=gradient.begin(); it != gradient.end(); ++it)
+  for(std::vector<turtlesim::Ellipse >::iterator it=ellipse.begin(); it != ellipse.end(); ++it)
   {
     QPointF pCircle = QPoint((*it).x * meter_, (height_in_meters_ - (*it).y) * meter_);
 
-    if((*it).attraction == -1)
-    {
-          painter.setPen(grad_pen_goal_repulsive);
-    }
-    else {
-         painter.setPen(grad_pen_goal_attractive);
-    }
+    QPen pen = painter.pen();
+    pen.setWidth((*it).width);
+    pen.setColor(QColor((*it).r, (*it).g, (*it).b));
+
+    if((*it).solid == true)
+        pen.setStyle(Qt::PenStyle(Qt::SolidLine));
+    else if((*it).solid == false)
+        pen.setStyle(Qt::PenStyle(Qt::DashLine));
+
+    painter.setPen(pen);
 
     // draw Gradient
-    painter.drawEllipse(pCircle, (*it).r_goal *meter_, (*it).r_goal *meter_);
-
-    painter.setPen(grad_pen);
-    if((*it).attraction == -1)
-    {
-          painter.setPen(grad_pen_repulsive);
-    }
-    else {
-        painter.setPen(grad_pen);
-    }
-    painter.drawEllipse(pCircle, (*it).r_total *meter_, (*it).r_total *meter_);
-
+    painter.drawEllipse(pCircle, (*it).radius *meter_, (*it).radius *meter_);
   }
 
   // draw turtles
