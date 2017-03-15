@@ -11,14 +11,14 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${QT_IN
 link_directories(${catkin_LIBRARY_DIRS})
 
 add_message_files(DIRECTORY msg FILES 
-                  Color.msg Pose.msg PoseArray.msg)
+                  Color.msg Pose.msg PoseArray.msg Ellipse.msg)
 add_service_files(DIRECTORY srv FILES
                   Kill.srv
                   SetPen.srv
                   Spawn.srv
                   SpawnGrad.srv
                   SpawnImg.srv
-                  DrawGradient.srv
+                  DrawEllipse.srv
                   TeleportAbsolute.srv
                   TeleportRelative.srv)
 generate_messages(DEPENDENCIES geometry_msgs std_msgs std_srvs)
