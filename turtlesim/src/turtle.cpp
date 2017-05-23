@@ -165,15 +165,52 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
   pos_.rx() += std::sin(orient_ + PI/2.0) * lin_vel_ * dt;
   pos_.ry() += std::cos(orient_ + PI/2.0) * lin_vel_ * dt;
 
-  // Clamp to screen size
-  if (pos_.x() < 0 || pos_.x() > canvas_width ||
-      pos_.y() < 0 || pos_.y() > canvas_height)
-  {
-    ROS_WARN("Oh no! I hit the wall! (Clamping from [x=%f, y=%f])", pos_.x(), pos_.y());
-  }
+  //TODO make this configurable
+  // true limits the environment to the screen size,
+  // false gives a torus environment: left and right boundaries are connected, same with top and bottom
+  bool clamp_to_screen = false;
 
-  pos_.setX(std::min(std::max(static_cast<double>(pos_.x()), 0.0), static_cast<double>(canvas_width)));
-  pos_.setY(std::min(std::max(static_cast<double>(pos_.y()), 0.0), static_cast<double>(canvas_height)));
+  bool moved_through_boundaries = false;
+
+  if (clamp_to_screen)
+  {
+    // Clamp to screen size
+    if (pos_.x() < 0 || pos_.x() > canvas_width ||
+        pos_.y() < 0 || pos_.y() > canvas_height)
+    {
+      ROS_WARN("Oh no! I hit the wall! (Clamping from [x=%f, y=%f])", pos_.x(), pos_.y());
+    }
+
+    pos_.setX(std::min(std::max(static_cast<double>(pos_.x()), 0.0), static_cast<double>(canvas_width)));
+    pos_.setY(std::min(std::max(static_cast<double>(pos_.y()), 0.0), static_cast<double>(canvas_height)));
+  }
+  else
+  {
+    if (pos_.x() < 0)
+    {
+      pos_.setX(canvas_width + pos_.x());
+      orient_ = orient_  * PI;
+      moved_through_boundaries = true;
+    }
+    if (pos_.y() < 0)
+    {
+      pos_.setY(canvas_height + pos_.y());
+      orient_ = orient_  * PI;
+      moved_through_boundaries = true;
+    }
+    if (pos_.x() > canvas_width)
+    {
+      pos_.setX(pos_.x() - canvas_width);
+      orient_ = orient_  * PI;
+      moved_through_boundaries = true;
+    }
+    if (pos_.y() > canvas_height)
+    {
+      pos_.setY(pos_.y() - canvas_height);
+      orient_ = orient_ * PI;
+      moved_through_boundaries = true;
+    }
+  }
 
   // Publish pose of the turtle
   Pose p = getPose(canvas_width, canvas_height);
@@ -228,7 +265,7 @@ bool Turtle::update(M_Turtle& turtles, double dt, QPainter& path_painter, const 
     rotateImage();
     modified = true;
   }
-  if (pos_ != old_pos)
+  if (pos_ != old_pos && not moved_through_boundaries)
   {
     if (pen_on_)
     {
