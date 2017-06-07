@@ -63,16 +63,23 @@ TurtleFrame::TurtleFrame(QWidget* parent, Qt::WindowFlags f, int frame_width, in
   connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
   QVector<QString> turtles;
-  turtles.append("box-turtle.png");
-  turtles.append("robot-turtle.png");
-  turtles.append("sea-turtle.png");
-  turtles.append("diamondback.png");
-  turtles.append("electric.png");
-  turtles.append("fuerte.png");
-  turtles.append("groovy.png");
-  turtles.append("hydro.svg");
-  turtles.append("indigo.svg");
-  turtles.append("jade.png");
+  turtles.append("clean_robot_blue.png");
+  turtles.append("clean_robot_green.png");
+  turtles.append("clean_robot_orange.png");
+  turtles.append("clean_robot_red.png");
+  turtles.append("clean_robot_violet.png");
+  turtles.append("clean_robot_white.png");
+  turtles.append("clean_robot_yellow.png");
+//  turtles.append("box-turtle.png");
+//  turtles.append("robot-turtle.png");
+//  turtles.append("sea-turtle.png");
+//  turtles.append("diamondback.png");
+//  turtles.append("electric.png");
+//  turtles.append("fuerte.png");
+//  turtles.append("groovy.png");
+//  turtles.append("hydro.svg");
+//  turtles.append("indigo.svg");
+//  turtles.append("jade.png");
 
   QString images_path = (ros::package::getPath("turtlesim") + "/images/").c_str();
   for (int i = 0; i < turtles.size(); ++i)
