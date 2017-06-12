@@ -62,7 +62,7 @@ public:
 
   std::string spawnTurtle(const std::string& name, float x, float y, float angle);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index);
-  std::string spawnTurtle(const std::string& name, float x, float y, float angle, float goal_radius, float total_radius);
+  std::string spawnTurtle(const std::string& name, float x, float y, float angle, size_t index, float goal_radius, float total_radius);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision);
   std::string spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision, float goal_radius, float total_radius);
 

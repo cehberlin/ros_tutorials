@@ -135,7 +135,7 @@ TurtleFrame::~TurtleFrame()
 
 bool TurtleFrame::spawnCallback(turtlesim::Spawn::Request& req, turtlesim::Spawn::Response& res)
 {
-  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta);
+  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, req.img_index);
   if (name.empty())
   {
     ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
@@ -149,7 +149,7 @@ bool TurtleFrame::spawnCallback(turtlesim::Spawn::Request& req, turtlesim::Spawn
 
 bool TurtleFrame::spawnGradCallback(turtlesim::SpawnGrad::Request& req, turtlesim::SpawnGrad::Response& res)
 {
-  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, req.goal_radius, req.total_radius);
+  std::string name = spawnTurtle(req.name, req.x, req.y, req.theta, -1, req.goal_radius, req.total_radius);
   if (name.empty())
   {
     ROS_ERROR("A turtled named [%s] already exists", req.name.c_str());
@@ -218,12 +218,20 @@ std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, 
 }
 
 std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, size_t index){
+  if (index < 0 || index > (turtle_images_.size() - 1))
+  {
+    index = rand() % turtle_images_.size();
+  }
   return spawnTurtle(name, x, y, angle, turtle_images_[index], true, 0, 0);
 }
 
 
-std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, float goal_radius, float total_radius){
-  return spawnTurtle(name, x, y, angle, turtle_images_[rand() % turtle_images_.size()], true, goal_radius, total_radius);
+std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, size_t index, float goal_radius, float total_radius){
+  if (index < 0 || index > (turtle_images_.size() - 1))
+  {
+    index = rand() % turtle_images_.size();
+  }
+  return spawnTurtle(name, x, y, angle, turtle_images_[index], true, goal_radius, total_radius);
 }
 
 std::string TurtleFrame::spawnTurtle(const std::string& name, float x, float y, float angle, QImage& img, bool with_collision){
