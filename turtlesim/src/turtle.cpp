@@ -326,6 +326,7 @@ Pose Turtle::getPose(qreal canvas_width, qreal canvas_height)
   p.theta = orient_;
   p.linear_velocity = lin_vel_;
   p.angular_velocity = ang_vel_;
+  p.name = this->nh_.getNamespace().c_str();
   return p;
 }
 
